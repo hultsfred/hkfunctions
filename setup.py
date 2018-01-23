@@ -2,7 +2,7 @@
 
 # -*- coding: utf-8 -*-
 """The setup script.
-py setup.py bdist_wheel -d wheel --> saves wheel to folder, the folder must include a __init__-py
+py setup.py bdist_wheel -d wheel --> saves wheel to folder, the folder must include a __init__.py
 conda build ..\hkfunctions --> build conda package
 """
 
