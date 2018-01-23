@@ -1,0 +1,7 @@
+build/*
+hkfunctions.egg-info/*
+.vscode/*
+meta.yaml
+build/*
+wheels_old/*
+*/__pycache__/*
