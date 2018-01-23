@@ -44,14 +44,14 @@ def mssql_query(server, db, **kwargs):
     user = kwargs.pop('user', '')
     password = kwargs.pop('password', '')
     stored_procedure = kwargs.pop('sp', None)
-    sp_parameters = kwargs.pop('sp_parameters', None)  #Tuple
+    sp_parameters = kwargs.pop('sp_parameters', None)
     sp_return = kwargs.pop('sp_return', None)
     if kwargs:
         raise TypeError(f'{kwargs.keys()} are invalid keyword arguments')
     try:
         with pymssql.connect(
                 server=server, database=db, user=user,
-                password=password) as conn:  # Uppkoppling mot källdatabasen
+                password=password) as conn:
             with conn.cursor() as cur:
                 if stored_procedure is None:
                     cur.execute(query)
@@ -86,8 +86,8 @@ def sybase_query(server, db, query, user='', password=''):
         cur = conn.cursor()
         cur.execute(query)
         result_list = cur.fetchall(
-        )  # hämtar och sparar resultatet i en variabeln result_list som en lista
-        conn.close()  # avslutar uppkopplingen mot källdatabasen
+        )
+        conn.close()
         return result_list
     except Exception as exc:
         conn.close()
@@ -106,7 +106,7 @@ def xl_export(filepath, sheet, start_row=2):
     try:
         wb = load_workbook(
             filename=filepath, data_only=True, read_only=True
-        )  # om data_only saknas eller är false visas formler, read_only gör att endast data läses mycket snabbare se länk 1
+        )
         sheet = wb[sheet]
         data = []
         for row in sheet.iter_rows():
@@ -114,11 +114,10 @@ def xl_export(filepath, sheet, start_row=2):
             for cell in row:
                 data_row += [cell.value]
             data += [data_row]
-        start_row = start_row - 1  # default start_row är 2 för att inte kolumnnamn ska vara med. Men vill man ändra det går det. Dock så måste 1 subtraheras då första raden är 0 och andra raden är 1
+        start_row = start_row - 1
         result_list = [
             tuple(l) for l in data[start_row:]
-        ]  # gör från list of lists till list of tuples. Detta för att det ska vara enkelat att anända insert_into_db funktionen
-        # print (result_list)
+        ]
         return result_list
     except Exception as exc:
         print(exc)
@@ -138,9 +137,7 @@ def mssql_insert(
     user = kwargs.pop('user', '')
     password = kwargs.pop('password', '')
     truncate = kwargs.pop('truncate', 'no')
-    faulty_strings = kwargs.pop(
-        'faulty_strings',
-        False)  # används till folbokföring, där finns det ' inne i strängen.
+    faulty_strings = kwargs.pop('faulty_strings', False)
 
     if kwargs:
         raise TypeError(f'{kwargs.keys()} are invalid keyword arguments')
@@ -159,14 +156,14 @@ def mssql_insert(
             database=db,
             user=user,
             password=password,
-            autocommit=True) as conn:  # Uppkoppling mot källdatabasen
+            autocommit=True) as conn:
         with conn.cursor() as cur:
             try:
                 if result_list is not None:
                     error_list = []
-                    if truncate.startswith('y') or truncate.startswith(
+                    if truncate.lower().startswith('y') or truncate.lower().startswith(
                             'j'
-                    ):  # OBS!!! skrivs Y med stor bosktav så funkar det inte
+                    ):
                         sql = '''TRUNCATE TABLE ''' + table
                         cur.execute(sql)
                     if type(result_list[0]) == list:
@@ -232,7 +229,7 @@ def mssql_insert(
 
 
 def xl_to_csv(inFile, outFile, sheet):
-    '''UIHJHJK'''
+    '''write docstring'''
     try:
         # print("xlsxToCsv")
         wb = xlrd.open_workbook(inFile)
@@ -292,7 +289,7 @@ def txt_to_csv(path,
     delimiter_infile = if the delimiter of the txt file is known it can be
     specified here. Although it is not necassary if the delimiter is equal
     to one of the following: [',',';','\t','|']. If the delimiter not is one of
-    these 4 then the function will through an exception.
+    these 4 then the function will throw an exception.
     '''
     # add delete of originalfile
 
@@ -329,11 +326,11 @@ def bulk_insert(server,
                 truncate='nej',
                 firstrow=2,
                 fieldterminator='|'):
-    '''the connection MUST be closed outside the function'''
+    '''write docstring'''
     # print("bulk_insert")
     with pymssql.connect(
             server=server, database=db, user=user,
-            password=password) as conn:  # Uppkoppling mot källdatabasen
+            password=password) as conn:
         with conn.cursor() as cur:
             try:
                 if truncate.startswith('y') or truncate.startswith('j'):
@@ -351,9 +348,8 @@ def bulk_insert(server,
                            "'" + fieldterminator + "'")
                     cur.execute(sql)
                     conn.commit()
-                    # rowterminator = '/n' används inte i sql-variablen då det redan finns i csvfilen
                 else:
-                    sql = """                    
+                    sql = """
                     BULK INSERT %s
                     from %s
                     with
@@ -382,10 +378,8 @@ def list_to_csv(fullFilePath, result_list, csvType='w'):
             with open(fullFilePath, 'a', newline='\n') as f:
                 writer = csv.writer(f, delimiter='|')
                 writer.writerows(result_list)
-    except TypeError:  # fler fel borde kanskle listas här
+    except TypeError:
         pass
-    # Har haft problem med dubla roterminators, förhoppningsvis fixar
-    # newline='/n' detta
 
 
 def checkDataForFaultyDelimiters(data,
@@ -512,7 +506,7 @@ def grouper(iterable, n, fillvalue=None):
     """
     delar upp en iterable i n delar. Bra att ha vid frågor mot api när antalet tillåtna
     element är begränsat
-    källa: 
+    källa:
     https://stackoverflow.com/questions/434287/what-is-the-most-pythonic-way-to-iterate-over-a-list-in-chunks
     """
 
@@ -551,7 +545,7 @@ class LogDBHandler(logging.Handler):
         # Make the SQL insert
         if self.log_error != 'NULL':
             sql = f"""
-                INSERT INTO {self.db_tbl_log} (created_at, integration, created_by, log_level, 
+                INSERT INTO {self.db_tbl_log} (created_at, integration, created_by, log_level,
                 log_levelname, log, error, traceback) VALUES (
                     (convert(datetime2(7), \'{tm}\')),
                     \'{self.integration}\',
@@ -565,7 +559,7 @@ class LogDBHandler(logging.Handler):
 
         else:
             sql = f"""
-                INSERT INTO {self.db_tbl_log} (created_at, integration, created_by, log_level, 
+                INSERT INTO {self.db_tbl_log} (created_at, integration, created_by, log_level,
                 log_levelname, log, error, traceback) VALUES (
                     (convert(datetime2(7), \'{tm}\')),
                     \'{self.integration}\',
@@ -581,8 +575,6 @@ class LogDBHandler(logging.Handler):
             self.sql_cursor.execute(sql)
             self.sql_conn.commit()
             self.sql_conn.close()
-        # If error - print it out on screen. Since DB is not working - there's
-        # no point making a log about it to the database :)
         except pymssql.Error as e:
             self.sql_conn.close()
             print(sql)
@@ -595,9 +587,9 @@ def create_logger():
     Creates a logging object and returns it\n
     TODO: * support for custom filename and path\n
           * same format as create_logger_db\n
-    
+
     Example:\n
-    
+
     from hkfunctions import create_logger_logger, exceptions\n
     logger = create_logger()\n
     @exceptions(logger)\n
@@ -624,7 +616,7 @@ def create_logger_db(sqlConn, sqlCursor, dbTblLog, integration_id):
     Creates a logging object and returns it. pymssql is necassary.\n
     Only one occureance of the decorator can be run in the sam file for some reason.\n
     If multiple functions should must run and be logged tehy must be in separate files\n
-    
+
     Example:\n
     import pymssql\n
     from hkfunctions import create_logger_logger, exceptions\n
@@ -648,9 +640,9 @@ def create_logger_db(sqlConn, sqlCursor, dbTblLog, integration_id):
 
 def exception(logger):
     """
-    A decorator that wraps the passed in function and logs 
+    A decorator that wraps the passed in function and logs
     exceptions should one occur
- 
+
     @param logger: The logging object
     """
 
@@ -679,6 +671,9 @@ def exception(logger):
 
 
 def send_mail(server, from_, to, subject, **kwargs):
+    '''
+    write docstring
+    '''
     messageHeader = kwargs.pop('messageHeader', None)
     messageBody = kwargs.pop('messageBody', None)
     if messageHeader and messageBody:
