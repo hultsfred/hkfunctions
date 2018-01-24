@@ -539,32 +539,35 @@ class LogDBHandler(logging.Handler):
             self.log_traceback = 'NULL'
         # Make the SQL insert
         if self.log_error != 'NULL':
-            sql = f"""
-                INSERT INTO {self.db_tbl_log} (created_at, integration, created_by, log_level,
+            sql = """
+                INSERT INTO {} (created_at, integration, created_by, log_level,
                 log_levelname, log, error, traceback) VALUES (
-                    (convert(datetime2(7), \'{tm}\')),
-                    \'{self.integration}\',
-                    \'{record.name}\',
-                    \'{record.levelno}\',
-                    \'{record.levelname}\',
-                    \'{self.log_info}\',
-                    \'{self.log_error}\',
-                    \'{self.log_traceback}\')
-                """
-
+                    (convert(datetime2(7), \'{}\')),
+                    \'{}\',
+                    \'{}\',
+                    \'{}\',
+                    \'{}\',
+                    \'{}\',
+                    \'{}\',
+                    \'{}\')
+                """.format(self.db_tbl_log, tm, self.integration, record.name,
+                           record.levelno, record.levelname, self.log_info,
+                           self.log_error, self.log_traceback)
         else:
-            sql = f"""
-                INSERT INTO {self.db_tbl_log} (created_at, integration, created_by, log_level,
+            sql = """
+                INSERT INTO {} (created_at, integration, created_by, log_level,
                 log_levelname, log, error, traceback) VALUES (
-                    (convert(datetime2(7), \'{tm}\')),
-                    \'{self.integration}\',
-                    \'{record.name}\',
-                    \'{record.levelno}\',
-                    \'{record.levelname}\',
-                    \'{self.log_info}\',
-                    {self.log_error},
-                    {self.log_traceback})
-                """
+                    (convert(datetime2(7), \'{}\')),
+                    \'{}\',
+                    \'{}\',
+                    \'{}\',
+                    \'{}\',
+                    \'{}\',
+                    \'{}\',
+                    \'{}\')
+                """.format(self.db_tbl_log, tm, self.integration, record.name,
+                           record.levelno, record.levelname, self.log_info,
+                           self.log_error, self.log_traceback)
 
         try:
             self.sql_cursor.execute(sql)
