@@ -563,8 +563,8 @@ class LogDBHandler(logging.Handler):
                     \'{}\',
                     \'{}\',
                     \'{}\',
-                    \'{}\',
-                    \'{}\')
+                    '{}',
+                    '{}')
                 """.format(self.db_tbl_log, tm, self.integration, record.name,
                            record.levelno, record.levelname, self.log_info,
                            self.log_error, self.log_traceback)
