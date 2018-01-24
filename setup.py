@@ -12,7 +12,7 @@ requirements = ['sqlanydb', 'openpyxl', 'xlrd', 'paramiko']
 
 setup(
     name='hkfunctions',
-    version='0.5.0',
+    version='0.4.4',
     description="function library",
     long_description='',
     author="Henric Sundberg",

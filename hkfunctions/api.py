@@ -47,7 +47,8 @@ def mssql_query(server, db, **kwargs):
     sp_parameters = kwargs.pop('sp_parameters', None)
     sp_return = kwargs.pop('sp_return', None)
     if kwargs:
-        raise TypeError(f'{kwargs.keys()} are invalid keyword arguments')
+        raise TypeError('{} are invalid keyword arguments'.format(
+            kwargs.keys()))
     try:
         with pymssql.connect(
                 server=server, database=db, user=user,
@@ -85,8 +86,7 @@ def sybase_query(server, db, query, user='', password=''):
     try:
         cur = conn.cursor()
         cur.execute(query)
-        result_list = cur.fetchall(
-        )
+        result_list = cur.fetchall()
         conn.close()
         return result_list
     except Exception as exc:
@@ -104,9 +104,7 @@ def xl_export(filepath, sheet, start_row=2):
     interssant att jämföra denna i kombination med mssql_insert med.
     För alternativ se xl_to_csv'''
     try:
-        wb = load_workbook(
-            filename=filepath, data_only=True, read_only=True
-        )
+        wb = load_workbook(filename=filepath, data_only=True, read_only=True)
         sheet = wb[sheet]
         data = []
         for row in sheet.iter_rows():
@@ -115,9 +113,7 @@ def xl_export(filepath, sheet, start_row=2):
                 data_row += [cell.value]
             data += [data_row]
         start_row = start_row - 1
-        result_list = [
-            tuple(l) for l in data[start_row:]
-        ]
+        result_list = [tuple(l) for l in data[start_row:]]
         return result_list
     except Exception as exc:
         print(exc)
@@ -140,7 +136,8 @@ def mssql_insert(
     faulty_strings = kwargs.pop('faulty_strings', False)
 
     if kwargs:
-        raise TypeError(f'{kwargs.keys()} are invalid keyword arguments')
+        raise TypeError('{} are invalid keyword arguments'.format(
+            kwargs.keys()))
     if result_list is not None and statement is not None:
         raise TypeError(
             'It is not possible to combine result_list and statement. Chose one.'
@@ -161,9 +158,8 @@ def mssql_insert(
             try:
                 if result_list is not None:
                     error_list = []
-                    if truncate.lower().startswith('y') or truncate.lower().startswith(
-                            'j'
-                    ):
+                    if truncate.lower().startswith(
+                            'y') or truncate.lower().startswith('j'):
                         sql = '''TRUNCATE TABLE ''' + table
                         cur.execute(sql)
                     if type(result_list[0]) == list:
@@ -329,8 +325,7 @@ def bulk_insert(server,
     '''write docstring'''
     # print("bulk_insert")
     with pymssql.connect(
-            server=server, database=db, user=user,
-            password=password) as conn:
+            server=server, database=db, user=user, password=password) as conn:
         with conn.cursor() as cur:
             try:
                 if truncate.startswith('y') or truncate.startswith('j'):
@@ -650,7 +645,7 @@ def exception(logger):
         def wrapper(*args, **kwargs):
             try:
                 function = func(*args, **kwargs)
-                logger.info(f'{func.__name__} worked correctly')
+                logger.info('{} worked correctly'.format(func.__name__))
                 return function
             except Exception as exc:
                 # log the exception and traceback
