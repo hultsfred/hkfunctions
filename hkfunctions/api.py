@@ -3,6 +3,7 @@ module that helps with everyday life :)
 """
 
 import os
+import sys
 import csv
 import re
 import time
@@ -543,8 +544,9 @@ class LogDBHandler(logging.Handler):
             self.log_error = 'NULL'
             self.log_traceback = 'NULL'
         # Make the SQL insert
-        if self.log_error != 'NULL':
-            sql = f"""
+        # overkill to use bothf-string and str.format. but i prefer f-strings and 
+        if sys.version_info.major + sys.version_info.minor/10 >=3.6:        
+            sql1 = f"""
                 INSERT INTO {self.db_tbl_log} (created_at, integration, created_by, log_level,
                 log_levelname, log, error, traceback) VALUES (
                     (convert(datetime2(7), \'{tm}\')),
@@ -553,24 +555,43 @@ class LogDBHandler(logging.Handler):
                     \'{record.levelno}\',
                     \'{record.levelname}\',
                     \'{self.log_info}\',
-                    \'{self.log_error}\',
-                    \'{self.log_traceback}\')
+                    """
+            if self.log_error != 'NULL':
+                sql2 = f"""
+                \'{self.log_error}\',
+                \'{self.log_traceback}\')
                 """
-
+            else:
+                sql2 = f"""
+                {self.log_error},
+                {self.log_traceback})
+                """
+            sql = sql1 + sql2
         else:
-            sql = f"""
-                INSERT INTO {self.db_tbl_log} (created_at, integration, created_by, log_level,
+            sql1 = """
+                INSERT INTO {} (created_at, integration, created_by, log_level,
                 log_levelname, log, error, traceback) VALUES (
-                    (convert(datetime2(7), \'{tm}\')),
-                    \'{self.integration}\',
-                    \'{record.name}\',
-                    \'{record.levelno}\',
-                    \'{record.levelname}\',
-                    \'{self.log_info}\',
-                    {self.log_error},
-                    {self.log_traceback})
-                """
-
+                    (convert(datetime2(7), \'{}\')),
+                    \'{}\',
+                    \'{}\',
+                    \'{}\',
+                    \'{}\',
+                    \'{}\',
+                    \'{}\',
+                    \'{}\')
+                    """.format(self.db_tbl_log, tm, self.integration, record.name,
+                            record.levelno, record.levelname, self.log_info)
+            if self.log_error != 'NULL':
+                sql2 = """
+                    \'{}\',
+                    \'{}\')
+                    """.format(record.levelname, self.log_info)
+            else:
+                sql2 = """
+                        '{}',
+                        '{}')
+                        """.format(record.levelname, self.log_info)
+            sql = sql1 + sql2
         try:
             self.sql_cursor.execute(sql)
             self.sql_conn.commit()
