@@ -20,6 +20,10 @@ import xlrd
 import paramiko
 import smtplib
 from email.message import EmailMessage
+import itertools
+import sys
+import time
+import threading
 
 # TODO: * write docstrings
 #       * remove unneccasary comments
@@ -86,8 +90,7 @@ def sybase_query(server, db, query, user='', password=''):
     try:
         cur = conn.cursor()
         cur.execute(query)
-        result_list = cur.fetchall(
-        )
+        result_list = cur.fetchall()
         conn.close()
         return result_list
     except Exception as exc:
@@ -105,9 +108,7 @@ def xl_export(filepath, sheet, start_row=2):
     interssant att jämföra denna i kombination med mssql_insert med.
     För alternativ se xl_to_csv'''
     try:
-        wb = load_workbook(
-            filename=filepath, data_only=True, read_only=True
-        )
+        wb = load_workbook(filename=filepath, data_only=True, read_only=True)
         sheet = wb[sheet]
         data = []
         for row in sheet.iter_rows():
@@ -116,9 +117,7 @@ def xl_export(filepath, sheet, start_row=2):
                 data_row += [cell.value]
             data += [data_row]
         start_row = start_row - 1
-        result_list = [
-            tuple(l) for l in data[start_row:]
-        ]
+        result_list = [tuple(l) for l in data[start_row:]]
         return result_list
     except Exception as exc:
         print(exc)
@@ -162,9 +161,8 @@ def mssql_insert(
             try:
                 if result_list is not None:
                     error_list = []
-                    if truncate.lower().startswith('y') or truncate.lower().startswith(
-                            'j'
-                    ):
+                    if truncate.lower().startswith(
+                            'y') or truncate.lower().startswith('j'):
                         sql = '''TRUNCATE TABLE ''' + table
                         cur.execute(sql)
                     if type(result_list[0]) == list:
@@ -330,8 +328,7 @@ def bulk_insert(server,
     '''write docstring'''
     # print("bulk_insert")
     with pymssql.connect(
-            server=server, database=db, user=user,
-            password=password) as conn:
+            server=server, database=db, user=user, password=password) as conn:
         with conn.cursor() as cur:
             try:
                 if truncate.startswith('y') or truncate.startswith('j'):
@@ -544,8 +541,8 @@ class LogDBHandler(logging.Handler):
             self.log_error = 'NULL'
             self.log_traceback = 'NULL'
         # Make the SQL insert
-        # overkill to use bothf-string and str.format. but i prefer f-strings and 
-        if sys.version_info.major + sys.version_info.minor/10 >=3.6:        
+        # overkill to use bothf-string and str.format. but i prefer f-strings and
+        if sys.version_info.major + sys.version_info.minor / 10 >= 3.6:
             sql1 = f"""
                 INSERT INTO {self.db_tbl_log} (created_at, integration, created_by, log_level,
                 log_levelname, log, error, traceback) VALUES (
@@ -579,8 +576,9 @@ class LogDBHandler(logging.Handler):
                     \'{}\',
                     \'{}\',
                     \'{}\')
-                    """.format(self.db_tbl_log, tm, self.integration, record.name,
-                            record.levelno, record.levelname, self.log_info)
+                    """.format(self.db_tbl_log, tm, self.integration,
+                               record.name, record.levelno, record.levelname,
+                               self.log_info)
             if self.log_error != 'NULL':
                 sql2 = """
                     \'{}\',
@@ -716,3 +714,28 @@ def send_mail(server, from_, to, subject, **kwargs):
     except Exception:
         s.quit()
     s.quit()
+
+
+class Spinner():
+    """
+    original code is copied from: https://gist.github.com/cevaris/87afc14c7a4e5e44ad21
+    some revision is done to make it work with python3
+    """
+
+    spinner_cycle = itertools.cycle(['-', '/', '|', '\\'])
+
+    def __init__(self):
+        self.stop_running = threading.Event()
+        self.spin_thread = threading.Thread(target=self.init_spin)
+
+    def start(self):
+        self.spin_thread.start()
+
+    def stop(self):
+        self.stop_running.set()
+        self.spin_thread.join()
+
+    def init_spin(self):
+        while not self.stop_running.is_set():
+            print(self.spinner_cycle.__next__(), end='\r')
+            time.sleep(0.25)
