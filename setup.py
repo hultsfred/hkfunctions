@@ -8,11 +8,17 @@ conda build ..\hkfunctions --> build conda package
 
 from setuptools import setup, find_packages
 
-requirements = ['sqlanydb', 'openpyxl', 'xlrd', 'paramiko']
+requirements = []
+extras_require = {
+    "sqlserver": ["pymssql"],
+    "sybase": ["sqlanydb"],
+    "log": ["pymssql"],
+    "files": ["xlrd", "openpyxl"]
+}
 
 setup(
     name='hkfunctions',
-    version='0.6.1',
+    version='0.7.0',
     description="function library",
     long_description='',
     author="Henric Sundberg",
@@ -21,6 +27,7 @@ setup(
     packages=['hkfunctions'],
     include_package_data=True,
     install_requires=requirements,
+    extras_require=extras_require,
     license="MIT license",
     zip_safe=False,
     keywords='hkfunctions',
