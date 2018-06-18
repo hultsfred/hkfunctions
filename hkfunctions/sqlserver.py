@@ -4,8 +4,11 @@ except ImportError as exc:
     print(exc)
     print(f"The module {exc.name} is required!")
 
+# TODO:
+#       * Split statement to two functions, query and stored_procedure
 
-def mssql_query(server, db, **kwargs):
+
+def statement(server, db, **kwargs):
     '''
     kwargs:
     user: Användarnamn, Default: empty string, i.e. ''
@@ -58,9 +61,8 @@ def mssql_query(server, db, **kwargs):
         raise
 
 
-def mssql_insert(
-        server, db, table=None, data=None,
-        **kwargs):  # result_list, truncate='no', user='', password=''):
+def insert(server, db, table=None, data=None,
+           **kwargs):  # result_list, truncate='no', user='', password=''):
     ''' Funkar bara för MSSQL. Denna funktion är beroende av en lista.
     Denna lista är en input. Tex kan mssql_query och sybase_query användas.
     KAnske kan få den att fungera med excel också,kolla länk:

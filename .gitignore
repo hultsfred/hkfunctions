@@ -6,4 +6,3 @@ build/*
 wheels_old/*
 */__pycache__/*
 conda-recipe/*
-hkfunctions/api*

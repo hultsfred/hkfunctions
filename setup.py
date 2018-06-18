@@ -18,7 +18,7 @@ extras_require = {
 
 setup(
     name='hkfunctions',
-    version='0.7.0',
+    version='0.7.1',
     description="function library",
     long_description='',
     author="Henric Sundberg",
