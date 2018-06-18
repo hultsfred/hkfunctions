@@ -3,6 +3,7 @@ import sys
 import logging
 import time
 import traceback
+
 try:
     import pymssql
 except ImportError as exc:
@@ -11,10 +12,10 @@ except ImportError as exc:
 
 
 class LogDBHandler(logging.Handler):
-    '''
+    """
     Customized logging handler that puts logs to the database.
     pymssql required
-    '''
+    """
 
     def __init__(self, sql_conn, sql_cursor, db_tbl_log, integration_id):
         logging.Handler.__init__(self)
@@ -29,15 +30,15 @@ class LogDBHandler(logging.Handler):
         # Clear the log message so it can be put to db via sql (escape quotes)
         self.log_msg = record.msg
         self.log_msg = self.log_msg.strip()
-        self.log_msg = self.log_msg.replace('\'', '\'\'').split('|')
+        self.log_msg = self.log_msg.replace("'", "''").split("|")
         if len(self.log_msg) > 1:
             self.log_info = str(self.log_msg[0])
             self.log_error = str(self.log_msg[1])
             self.log_traceback = str(self.log_msg[2])
         else:
             self.log_info = self.log_msg[0]
-            self.log_error = 'NULL'
-            self.log_traceback = 'NULL'
+            self.log_error = "NULL"
+            self.log_traceback = "NULL"
         sql1 = f"""
             INSERT INTO {self.db_tbl_log} (created_at, integration, created_by, log_level,
             log_levelname, log, error, traceback) VALUES (
@@ -48,7 +49,7 @@ class LogDBHandler(logging.Handler):
                 \'{record.levelname}\',
                 \'{self.log_info}\',
                 """
-        if self.log_error != 'NULL':
+        if self.log_error != "NULL":
             sql2 = f"""
             \'{self.log_error}\',
             \'{self.log_traceback}\')
@@ -67,7 +68,7 @@ class LogDBHandler(logging.Handler):
             self.sql_conn.close()
             print(sql)
             print(str(e))
-            print('CRITICAL DB ERROR! Logging to database not possible!')
+            print("CRITICAL DB ERROR! Logging to database not possible!")
 
 
 def create_logger():
@@ -90,7 +91,7 @@ def create_logger():
     # create the logging file handler
     fh = logging.FileHandler(r"test.log")
 
-    fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     formatter = logging.Formatter(fmt)
     fh.setFormatter(formatter)
 
@@ -138,7 +139,7 @@ def exception(logger):
         def wrapper(*args, **kwargs):
             try:
                 function = func(*args, **kwargs)
-                logger.info(f'{func.__name__} worked correctly')
+                logger.info(f"{func.__name__} worked correctly")
                 return function
             except Exception as exc:
                 # log the exception and traceback

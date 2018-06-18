@@ -5,8 +5,8 @@ except ImportError as exc:
     print(f"The module {exc.name} is required!")
 
 
-def query(server, db, query, user='', password=''):
-    ''' TODO: write docstring'''
+def query(server, db, query, user="", password=""):
+    """ TODO: write docstring"""
 
     conn = sqlanydb.connect(DSN=server, uid=user, pwd=password, dbn=db)
     try:

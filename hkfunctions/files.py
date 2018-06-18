@@ -1,6 +1,7 @@
 import os
 import csv
 import re
+
 try:
     import xlrd
 except ImportError as exc:
@@ -14,13 +15,12 @@ except ImportError as exc:
 
 
 def xl_export(filepath, sheet, start_row=2):
-    '''Hämtar data från en excelfil och returnerar en lista som kan användas
+    """Hämtar data från en excelfil och returnerar en lista som kan användas
     i funktionen mssql_insert. Är det många rader så är den seg. Skulle vara
     interssant att jämföra denna i kombination med mssql_insert med.
-    För alternativ se xl_to_csv'''
+    För alternativ se xl_to_csv"""
     try:
-        wb = openpyxl.load_workbook(
-            filename=filepath, data_only=True, read_only=True)
+        wb = openpyxl.load_workbook(filename=filepath, data_only=True, read_only=True)
         sheet = wb[sheet]
         data = []
         for row in sheet.iter_rows():
@@ -37,13 +37,13 @@ def xl_export(filepath, sheet, start_row=2):
 
 
 def xl_to_csv(inFile, outFile, sheet):
-    '''write docstring'''
+    """write docstring"""
     try:
         # print("xlsxToCsv")
         wb = xlrd.open_workbook(inFile)
         sh = wb.sheet_by_name(sheet)
-        your_csv_file = open(outFile, 'w', encoding='utf-8', newline='')
-        wr = csv.writer(your_csv_file, delimiter='|')
+        your_csv_file = open(outFile, "w", encoding="utf-8", newline="")
+        wr = csv.writer(your_csv_file, delimiter="|")
         # print('xlsxToCsv')
         for rownum in range(sh.nrows):
             wr.writerow(sh.row_values(rownum))
@@ -53,18 +53,18 @@ def xl_to_csv(inFile, outFile, sheet):
         raise
 
 
-def change_enc_one_file(outFile, s_decode='utf-8', d_encode='utf-16'):
-    '''write docstring'''
+def change_enc_one_file(outFile, s_decode="utf-8", d_encode="utf-16"):
+    """write docstring"""
     print("changeEnc")
     with open(outFile, "rb") as source_file:
         target_file_name = outFile
-        with open(target_file_name, 'w+b') as dest_file:
+        with open(target_file_name, "w+b") as dest_file:
             contents = source_file.read()
             dest_file.write(contents.decode(s_decode).encode(d_encode))
 
 
-def change_enc_multiple_files(path, s_decode='utf-8', d_encode='utf-16'):
-    '''write docstring'''
+def change_enc_multiple_files(path, s_decode="utf-8", d_encode="utf-16"):
+    """write docstring"""
 
     for file in os.listdir(path):
         # print("denc_utf16_Kör: "+file)
@@ -77,16 +77,18 @@ def change_enc_multiple_files(path, s_decode='utf-8', d_encode='utf-16'):
             except OSError:
                 pass
             target_file_name = filepath
-            with open(target_file_name, 'w+b') as dest_file:
+            with open(target_file_name, "w+b") as dest_file:
                 dest_file.write(contents.decode(s_decode).encode(d_encode))
 
 
-def txt_to_csv(path,
-               delete_original_file='Yes',
-               encoding='utf-8',
-               delimiter_outfile=';',
-               delimiter_infile=''):
-    '''
+def txt_to_csv(
+    path,
+    delete_original_file="Yes",
+    encoding="utf-8",
+    delimiter_outfile=";",
+    delimiter_infile="",
+):
+    """
     This function loops through a chosen folder and changes a txt file to a
     csv file. Optinal changes to teh file is delieting the original file,
     reencoding, and change of the delimiter\n
@@ -98,54 +100,51 @@ def txt_to_csv(path,
     specified here. Although it is not necassary if the delimiter is equal
     to one of the following: [',',';','\t','|']. If the delimiter not is one of
     these 4 then the function will throw an exception.
-    '''
+    """
     # add delete of originalfile
 
     file_list = os.listdir(path)
     for file in file_list:
-        if os.path.splitext(file)[1] != '.txt':
+        if os.path.splitext(file)[1] != ".txt":
             continue
         filename = os.path.splitext(file)[0]
         filepath_in = path + file
         filepath_out = path + filename + ".csv"
-        with open(filepath_in, 'r') as fin:
-            if delimiter_infile == '':
-                dialect = csv.Sniffer().sniff(fin.readline(),
-                                              [',', ';', '\t', '|'])
+        with open(filepath_in, "r") as fin:
+            if delimiter_infile == "":
+                dialect = csv.Sniffer().sniff(fin.readline(), [",", ";", "\t", "|"])
                 fin.seek(0)
             else:
                 dialect = delimiter_infile
             in_file = csv.reader(fin, dialect)
-            with open(
-                    filepath_out, 'w', newline='', encoding=encoding) as fout:
+            with open(filepath_out, "w", newline="", encoding=encoding) as fout:
                 out_file = csv.writer(fout, delimiter=delimiter_outfile)
                 out_file.writerows(in_file)
-        if str.upper(delete_original_file).startswith('Y') or str.upper(
-                delete_original_file).startswith('J'):
+        if str.upper(delete_original_file).startswith("Y") or str.upper(
+            delete_original_file
+        ).startswith("J"):
             os.remove(filepath_in)
 
 
-def list_to_csv(fullFilePath, result_list, csvType='w'):
-    ''' '''
+def list_to_csv(fullFilePath, result_list, csvType="w"):
+    """ """
     try:
-        if csvType == 'w':
-            with open(fullFilePath, 'w', newline='\n') as f:
-                writer = csv.writer(f, delimiter='|')
+        if csvType == "w":
+            with open(fullFilePath, "w", newline="\n") as f:
+                writer = csv.writer(f, delimiter="|")
                 writer.writerows(result_list)
-        if csvType == 'a':
-            with open(fullFilePath, 'a', newline='\n') as f:
-                writer = csv.writer(f, delimiter='|')
+        if csvType == "a":
+            with open(fullFilePath, "a", newline="\n") as f:
+                writer = csv.writer(f, delimiter="|")
                 writer.writerows(result_list)
     except TypeError:
         pass
 
 
-def checkDataForFaultyDelimiters(data,
-                                 expected_number_of_delimiters,
-                                 delimiter=";",
-                                 start_row=0,
-                                 end_row="LAST_ROW"):
-    '''Checks if there are any rows that has to many delimiters and returns
+def checkDataForFaultyDelimiters(
+    data, expected_number_of_delimiters, delimiter=";", start_row=0, end_row="LAST_ROW"
+):
+    """Checks if there are any rows that has to many delimiters and returns
     the total number of "bad rows".\n
     return: int\n
     Inputs:\n
@@ -154,7 +153,7 @@ def checkDataForFaultyDelimiters(data,
     delimiter = string. Default is ";"\n
     start_row = int. Default is the first row, i.e. index 0.\n
     end_row = int. Default is the last row, i.e. len(data)
-    '''
+    """
     ex = expected_number_of_delimiters
     d = delimiter
     st = start_row
@@ -170,9 +169,8 @@ def checkDataForFaultyDelimiters(data,
     return count
 
 
-def correctFaultyDelimiter(data, position_of_faulty_delimiter, delimiter,
-                           replacement):
-    '''Byter endast ut en felaktig delimiter'''
+def correctFaultyDelimiter(data, position_of_faulty_delimiter, delimiter, replacement):
+    """Byter endast ut en felaktig delimiter"""
     corrected_bad_rows = []
     n = position_of_faulty_delimiter
     d = delimiter
@@ -191,14 +189,16 @@ def correctFaultyDelimiter(data, position_of_faulty_delimiter, delimiter,
     return corrected_bad_rows
 
 
-def correctMultipleFaultyDelimiters(data,
-                                    position_of_faulty_delimiter,
-                                    delimiter,
-                                    replacement,
-                                    columns,
-                                    start_row=0,
-                                    end_row="LAST_ROW"):
-    ''' Finds and replaces faulty delimiters in list of lists.
+def correctMultipleFaultyDelimiters(
+    data,
+    position_of_faulty_delimiter,
+    delimiter,
+    replacement,
+    columns,
+    start_row=0,
+    end_row="LAST_ROW",
+):
+    """ Finds and replaces faulty delimiters in list of lists.
     When to use: E.g. if there should be 5 columns in the data but there is
     more than four (4) delimiters the data is impossible to insert into a
     database. This function replaces the faulty delimiters and makes the
@@ -213,7 +213,7 @@ def correctMultipleFaultyDelimiters(data,
     columns = int, numnber of columns in the data.
     start_row = int. Default is the first row, i.e. index 0.\n
     end_row = int. Default is the last roe, i.e. len(data)
-    '''
+    """
     corrected_data = []
     n = position_of_faulty_delimiter
     d = delimiter

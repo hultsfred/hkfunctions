@@ -9,7 +9,7 @@ except ImportError as exc:
 
 
 def statement(server, db, **kwargs):
-    '''
+    """
     kwargs:
     user: Användarnamn, Default: empty string, i.e. ''
     password: Llöseord till server, Default: empty string, i.e. ''
@@ -22,19 +22,19 @@ def statement(server, db, **kwargs):
     resultatet blir i ett konstigt format, det står Decimal('123') istället
     för 123. Detta kan lösas genom att casta om kolumnen till float eller int
     (kanske finns bättre alternativ?).
-    '''
-    query = kwargs.pop('query', None)
-    user = kwargs.pop('user', '')
-    password = kwargs.pop('password', '')
-    stored_procedure = kwargs.pop('sp', None)
-    sp_parameters = kwargs.pop('sp_parameters', None)
-    sp_return = kwargs.pop('sp_return', None)
+    """
+    query = kwargs.pop("query", None)
+    user = kwargs.pop("user", "")
+    password = kwargs.pop("password", "")
+    stored_procedure = kwargs.pop("sp", None)
+    sp_parameters = kwargs.pop("sp_parameters", None)
+    sp_return = kwargs.pop("sp_return", None)
     if kwargs:
-        raise TypeError(f'{kwargs.keys()} are invalid keyword arguments')
+        raise TypeError(f"{kwargs.keys()} are invalid keyword arguments")
     try:
         with pymssql.connect(
-                server=server, database=db, user=user,
-                password=password) as conn:
+            server=server, database=db, user=user, password=password
+        ) as conn:
             with conn.cursor() as cur:
                 if stored_procedure is None:
                     cur.execute(query)
@@ -42,7 +42,7 @@ def statement(server, db, **kwargs):
                     return result_list
                 else:
                     if sp_parameters is None:
-                        cur.callproc(stored_procedure, )
+                        cur.callproc(stored_procedure)
                         if sp_return is not None:
                             result_list = [r for r in cur]
                             return result_list
@@ -61,53 +61,51 @@ def statement(server, db, **kwargs):
         raise
 
 
-def insert(server, db, table=None, data=None,
-           **kwargs):  # result_list, truncate='no', user='', password=''):
-    ''' Funkar bara för MSSQL. Denna funktion är beroende av en lista.
+def insert(
+    server, db, table=None, data=None, **kwargs
+):  # result_list, truncate='no', user='', password=''):
+    """ Funkar bara för MSSQL. Denna funktion är beroende av en lista.
     Denna lista är en input. Tex kan mssql_query och sybase_query användas.
     KAnske kan få den att fungera med excel också,kolla länk:
     http://davidmburke.com/2013/02/13/pure-python-convert-any-spreadsheet-format-to-list/
-    '''
+    """
     result_list = data
-    statement = kwargs.pop('statement', None)
-    user = kwargs.pop('user', '')
-    password = kwargs.pop('password', '')
-    truncate = kwargs.pop('truncate', 'no')
-    faulty_strings = kwargs.pop('faulty_strings', False)
+    statement = kwargs.pop("statement", None)
+    user = kwargs.pop("user", "")
+    password = kwargs.pop("password", "")
+    truncate = kwargs.pop("truncate", "no")
+    faulty_strings = kwargs.pop("faulty_strings", False)
 
     if kwargs:
-        raise TypeError(f'{kwargs.keys()} are invalid keyword arguments')
+        raise TypeError(f"{kwargs.keys()} are invalid keyword arguments")
     if result_list is not None and statement is not None:
         raise TypeError(
-            'It is not possible to combine result_list and statement. Chose one.'
+            "It is not possible to combine result_list and statement. Chose one."
         )
     if result_list is None and statement is None:
-        raise TypeError(
-            'Either result_list or statement must be provided. Chose one.')
+        raise TypeError("Either result_list or statement must be provided. Chose one.")
     if result_list is not None and table is None:
-        raise TypeError(
-            'A tablename must be provided when a result_list is provided')
+        raise TypeError("A tablename must be provided when a result_list is provided")
     with pymssql.connect(
-            server=server,
-            database=db,
-            user=user,
-            password=password,
-            autocommit=True) as conn:
+        server=server, database=db, user=user, password=password, autocommit=True
+    ) as conn:
         with conn.cursor() as cur:
             try:
                 if result_list is not None:
                     error_list = []
-                    if truncate.lower().startswith(
-                            'y') or truncate.lower().startswith('j'):
-                        sql = '''TRUNCATE TABLE ''' + table
+                    if truncate.lower().startswith("y") or truncate.lower().startswith(
+                        "j"
+                    ):
+                        sql = """TRUNCATE TABLE """ + table
                         cur.execute(sql)
                     if type(result_list[0]) == list:
                         result_list = [tuple(l) for l in result_list]
                     if len(result_list) <= 1000:  # 3
-                        result_string = ','.join(
-                            str(r) for r in result_list)  # 4
+                        result_string = ",".join(str(r) for r in result_list)  # 4
                         result_string = result_string.replace("None", "NULL")
-                        statement = '''INSERT INTO ''' + table + ''' Values ''' + result_string  # 5
+                        statement = (
+                            """INSERT INTO """ + table + """ Values """ + result_string
+                        )  # 5
                         # print(statement)
                         cur.execute(statement)
                     else:
@@ -115,9 +113,14 @@ def insert(server, db, table=None, data=None,
                             for row in result_list:
                                 try:
                                     row = str(row).replace("None", "NULL")
-                                    #print(row)
-                                    statement = '''INSERT INTO ''' + table + ''' Values ''' + row
-                                    #print(statement)
+                                    # print(row)
+                                    statement = (
+                                        """INSERT INTO """
+                                        + table
+                                        + """ Values """
+                                        + row
+                                    )
+                                    # print(statement)
                                     cur.execute(statement)
                                 except Exception as exc:
                                     print(exc)
@@ -128,23 +131,29 @@ def insert(server, db, table=None, data=None,
                                 try:
                                     result_string = []
                                     for r in row:  # 8
-                                        r = ''.join(str(r).replace("'", "''"))
-                                        #print(y)
+                                        r = "".join(str(r).replace("'", "''"))
+                                        # print(y)
                                         result_string.append(r)
-                                    result_string = str(
-                                        tuple(result_string))  # 6
+                                    result_string = str(tuple(result_string))  # 6
                                     result_string = result_string.replace(
-                                        "\'None\'", "NULL").replace('"',
-                                                                    "'")  #7
-                                    #print(result_string)
-                                    statement = '''INSERT INTO ''' + table + ''' Values ''' + result_string
-                                    #print(statement)
+                                        "'None'", "NULL"
+                                    ).replace(
+                                        '"', "'"
+                                    )  # 7
+                                    # print(result_string)
+                                    statement = (
+                                        """INSERT INTO """
+                                        + table
+                                        + """ Values """
+                                        + result_string
+                                    )
+                                    # print(statement)
                                     cur.execute(statement)
                                 except Exception as exc:
                                     error_list.append(result_string)
                                     continue
-                    #if len(error_list) > 0:
-                    #print(f'ERROR:\n{error_list}\nERROR)
+                    # if len(error_list) > 0:
+                    # print(f'ERROR:\n{error_list}\nERROR)
                 else:
                     cur.execute(statement)
 
@@ -163,22 +172,25 @@ def insert(server, db, table=None, data=None,
     # 8: denna for loop ser till att ' ersätts med '' inne i varke column. Detta gör att hela raden är string vilket gör att None i sjuab mpste specifiera \'
 
 
-def bulk_insert(server,
-                user,
-                password,
-                db,
-                table,
-                filepath,
-                truncate='nej',
-                firstrow=2,
-                fieldterminator='|'):
-    '''write docstring'''
+def bulk_insert(
+    server,
+    user,
+    password,
+    db,
+    table,
+    filepath,
+    truncate="nej",
+    firstrow=2,
+    fieldterminator="|",
+):
+    """write docstring"""
     # print("bulk_insert")
     with pymssql.connect(
-            server=server, database=db, user=user, password=password) as conn:
+        server=server, database=db, user=user, password=password
+    ) as conn:
         with conn.cursor() as cur:
             try:
-                if truncate.startswith('y') or truncate.startswith('j'):
+                if truncate.startswith("y") or truncate.startswith("j"):
                     sql = """
                     TRUNCATE TABLE %s
                     BULK INSERT %s
@@ -189,8 +201,13 @@ def bulk_insert(server,
                     FIELDTERMINATOR= %s,
                     codepage='1252'
                     )
-                    """ % (table, table, "'" + filepath + "'", firstrow,
-                           "'" + fieldterminator + "'")
+                    """ % (
+                        table,
+                        table,
+                        "'" + filepath + "'",
+                        firstrow,
+                        "'" + fieldterminator + "'",
+                    )
                     cur.execute(sql)
                     conn.commit()
                 else:
@@ -203,8 +220,12 @@ def bulk_insert(server,
                     FIELDTERMINATOR= %s,
                     codepage='1252'
                     )
-                    """ % (table, "'" + filepath + "'", firstrow,
-                           "'" + fieldterminator + "'")
+                    """ % (
+                        table,
+                        "'" + filepath + "'",
+                        firstrow,
+                        "'" + fieldterminator + "'",
+                    )
                     cur.execute(sql)
                     conn.commit()
             except Exception as exc:
