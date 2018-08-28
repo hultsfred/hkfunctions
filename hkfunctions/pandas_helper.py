@@ -25,4 +25,3 @@ def from_dummies(dummy_df, sep="_") -> pd.DataFrame:
     from_dummies = pd.DataFrame(data={column_name: values}, index=stacked.index_)
     del from_dummies.index.name
     return from_dummies
-
