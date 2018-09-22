@@ -25,3 +25,28 @@ def from_dummies(dummy_df, sep="_") -> pd.DataFrame:
     from_dummies = pd.DataFrame(data={column_name: values}, index=stacked.index_)
     del from_dummies.index.name
     return from_dummies
+
+def create_dummies(source: pd.DataFrame,
+                   dummies: list,
+                   iloc: bool=False,
+                   target: pd.DataFrame=pd.DataFrame(),
+                   prefix: bool=False) -> pd.DataFrame:
+    """
+    Creates dummies based on columns given in parameter dummies. If iloc is
+    True index can be given
+    """
+    if iloc:
+        columns = source.columns
+        dummies = [columns[i] for i in dummies]
+    if not target.empty:
+        df = target
+    else:
+        df = pd.DataFrame()
+    for i in dummies:
+        if not prefix:
+            prefix, prefix_sep = '', ''
+        else:
+            prefix, prefix_sep = i, '_'
+        _temp = pd.get_dummies(data=source.loc[:, i], prefix=prefix, prefix_sep=prefix_sep)
+        df = pd.concat([df, _temp], axis=1)
+    return df
