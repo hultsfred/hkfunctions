@@ -79,3 +79,28 @@ def from_dummies(dummy_df: pd.DataFrame, dummy_columns=None, value_columns:bool=
     if noOutColumns != noExpectedColumns:
         warnings.warn(f"The expected number of columns in the output dataframe is {noExpectedColumns} and actual number of columns in the output dataframe is {noOutColumns}. If you have columns in the input dataframe that should be included in the output you must set the 'value_columns' parameter to True.")
     return from_dummies
+
+def create_dummies(source: pd.DataFrame,
+                   dummies: list,
+                   iloc: bool=False,
+                   target: pd.DataFrame=pd.DataFrame(),
+                   prefix: bool=False) -> pd.DataFrame:
+    """
+    Creates dummies based on columns given in parameter dummies. If iloc is
+    True index can be given
+    """
+    if iloc:
+        columns = source.columns
+        dummies = [columns[i] for i in dummies]
+    if not target.empty:
+        df = target
+    else:
+        df = pd.DataFrame()
+    for i in dummies:
+        if not prefix:
+            prefix, prefix_sep = '', ''
+        else:
+            prefix, prefix_sep = i, '_'
+        _temp = pd.get_dummies(data=source.loc[:, i], prefix=prefix, prefix_sep=prefix_sep)
+        df = pd.concat([df, _temp], axis=1)
+    return df
